@@ -1,0 +1,22 @@
+[package]
+name = "copperbird"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "copperbird_lib"
+crate-type = ["rlib"]
+
+[dependencies]
+bytemuck = { version = "1.25.0", features = ["derive"] }
+env_logger = "0.11.10"
+gilrs = "0.11.1"
+glam = { version = "0.32.1", features = ["serde", "bytemuck"] }
+hecs = { version = "0.11.0", features = ["column-serialize", "serde"] }
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg"] }
+log = "0.4.29"
+pollster = "0.4.0"
+ron = "0.12.1"
+serde = { version = "1.0.228", features = ["derive"] }
+wgpu = { version = "29.0.3", features = ["wgsl"] }
+winit = { version = "0.30.13" }
