@@ -13,7 +13,7 @@ use winit::{
     window::{Window, WindowAttributes, WindowId},
 };
 
-use crate::renderer::RenderContext;
+use crate::renderer::{RenderContext, TrianglePipeline};
 
 use super::input::InputState;
 
@@ -21,6 +21,7 @@ pub struct ActiveWindow {
     pub window: Arc<Window>,
     pub input: InputState,
     pub renderer: RenderContext,
+    pub triangle: TrianglePipeline,
 }
 
 pub struct WindowState {
@@ -75,12 +76,15 @@ impl ApplicationHandler for WindowState {
 
         let renderer = pollster::block_on(RenderContext::new(window.clone()));
 
+        let triangle = TrianglePipeline::new(&renderer.device, renderer.surface_config.format);
+
         window.set_visible(true);
 
         self.active = Some(ActiveWindow {
             window,
             input: InputState::default(),
             renderer,
+            triangle,
         })
     }
 
@@ -120,29 +124,8 @@ impl ApplicationHandler for WindowState {
                             .create_command_encoder(&CommandEncoderDescriptor {
                                 label: Some("frame_encoder"),
                             });
-                    {
-                        let _pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                            label: Some("clear_pass"),
-                            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                                view: &view,
-                                resolve_target: None,
-                                ops: Operations {
-                                    load: wgpu::LoadOp::Clear(Color {
-                                        r: 0.1,
-                                        g: 0.1,
-                                        b: 0.15,
-                                        a: 1.0,
-                                    }),
-                                    store: StoreOp::Store,
-                                },
-                                depth_slice: None,
-                            })],
-                            depth_stencil_attachment: None,
-                            timestamp_writes: None,
-                            occlusion_query_set: None,
-                            multiview_mask: None,
-                        });
-                    }
+
+                    active.triangle.draw(&mut encoder, &view);
 
                     active
                         .renderer
