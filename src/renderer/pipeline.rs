@@ -1,11 +1,17 @@
-use crate::renderer::buffer::{IndexBuffer, Vertex, VertexBuffer};
+use crate::renderer::{
+    buffer::{IndexBuffer, Vertex, VertexBuffer},
+    texture::Texture,
+};
 
 pub struct TrianglePipeline {
     pub pipeline: wgpu::RenderPipeline,
+    pub bind_group_layout: wgpu::BindGroupLayout,
 }
 
 impl TrianglePipeline {
     pub fn new(device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> Self {
+        let bind_group_layout = Texture::bind_group_layout(device);
+
         let shader_source = include_str!("shaders/triangle.wgsl");
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -15,7 +21,7 @@ impl TrianglePipeline {
 
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("triangle_pipeline_layout"),
-            bind_group_layouts: &[],
+            bind_group_layouts: &[Some(&bind_group_layout)],
             immediate_size: 0,
         });
 
@@ -34,7 +40,7 @@ impl TrianglePipeline {
                 entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: surface_format,
-                    blend: Some(wgpu::BlendState::REPLACE),
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
@@ -59,7 +65,10 @@ impl TrianglePipeline {
             cache: None,
         });
 
-        Self { pipeline }
+        Self {
+            pipeline,
+            bind_group_layout,
+        }
     }
 
     pub fn draw(
@@ -68,6 +77,7 @@ impl TrianglePipeline {
         view: &wgpu::TextureView,
         vertex_buffer: &VertexBuffer,
         index_buffer: &IndexBuffer,
+        texture: &Texture,
     ) {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("triangle_pass"),
@@ -96,6 +106,7 @@ impl TrianglePipeline {
         pass.set_vertex_buffer(0, vertex_buffer.buffer.slice(..));
         pass.set_index_buffer(index_buffer.buffer.slice(..), wgpu::IndexFormat::Uint16);
 
+        pass.set_bind_group(0, &texture.bind_group, &[]);
         pass.draw_indexed(0..index_buffer.count, 0, 0..1);
     }
 }

@@ -5,7 +5,7 @@ use wgpu::util::DeviceExt;
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub color: [f32; 3],
+    pub tex_coords: [f32; 2],
 }
 
 impl Vertex {
@@ -20,8 +20,8 @@ impl Vertex {
                     shader_location: 0,
                 },
                 wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32x3,
-                    offset: std::mem::offset_of!(Vertex, color) as wgpu::BufferAddress,
+                    format: wgpu::VertexFormat::Float32x2,
+                    offset: std::mem::offset_of!(Vertex, tex_coords) as wgpu::BufferAddress,
                     shader_location: 1,
                 },
             ],

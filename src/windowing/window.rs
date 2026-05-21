@@ -13,7 +13,9 @@ use winit::{
     window::{Window, WindowAttributes, WindowId},
 };
 
-use crate::renderer::{IndexBuffer, RenderContext, TrianglePipeline, Vertex, VertexBuffer};
+use crate::renderer::{
+    IndexBuffer, RenderContext, Texture, TrianglePipeline, Vertex, VertexBuffer,
+};
 
 use super::input::InputState;
 
@@ -24,6 +26,7 @@ pub struct ActiveWindow {
     pub triangle: TrianglePipeline,
     pub vertex_buffer: VertexBuffer,
     pub index_buffer: IndexBuffer,
+    pub texture: Texture,
 }
 
 pub struct WindowState {
@@ -80,22 +83,32 @@ impl ApplicationHandler for WindowState {
 
         let triangle = TrianglePipeline::new(&renderer.device, renderer.surface_config.format);
 
+        let texture_bytes = include_bytes!("../../assets/test.png");
+
+        let texture = Texture::from_bytes(
+            &renderer.device,
+            &renderer.queue,
+            texture_bytes,
+            "test_texture",
+            &triangle.bind_group_layout,
+        );
+
         let vertices = vec![
             Vertex {
                 position: [-0.5, 0.5, 0.0],
-                color: [1.0, 0.0, 0.0],
+                tex_coords: [0.0, 0.0],
             },
             Vertex {
                 position: [0.5, 0.5, 0.0],
-                color: [0.0, 1.0, 0.0],
+                tex_coords: [1.0, 0.0],
             },
             Vertex {
                 position: [-0.5, -0.5, 0.0],
-                color: [0.0, 0.0, 1.0],
+                tex_coords: [0.0, 1.0],
             },
             Vertex {
                 position: [0.5, -0.5, 0.0],
-                color: [1.0, 0.0, 0.0],
+                tex_coords: [1.0, 1.0],
             },
         ];
 
@@ -113,7 +126,8 @@ impl ApplicationHandler for WindowState {
             triangle,
             vertex_buffer,
             index_buffer,
-        })
+            texture,
+        });
     }
 
     fn window_event(
@@ -158,6 +172,7 @@ impl ApplicationHandler for WindowState {
                         &view,
                         &active.vertex_buffer,
                         &active.index_buffer,
+                        &active.texture,
                     );
 
                     active
