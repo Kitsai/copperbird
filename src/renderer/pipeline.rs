@@ -1,4 +1,4 @@
-use crate::renderer::buffer::{Vertex, VertexBuffer};
+use crate::renderer::buffer::{IndexBuffer, Vertex, VertexBuffer};
 
 pub struct TrianglePipeline {
     pub pipeline: wgpu::RenderPipeline,
@@ -67,6 +67,7 @@ impl TrianglePipeline {
         encoder: &mut wgpu::CommandEncoder,
         view: &wgpu::TextureView,
         vertex_buffer: &VertexBuffer,
+        index_buffer: &IndexBuffer,
     ) {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("triangle_pass"),
@@ -93,7 +94,8 @@ impl TrianglePipeline {
         pass.set_pipeline(&self.pipeline);
 
         pass.set_vertex_buffer(0, vertex_buffer.buffer.slice(..));
+        pass.set_index_buffer(index_buffer.buffer.slice(..), wgpu::IndexFormat::Uint16);
 
-        pass.draw(0..3, 0..1);
+        pass.draw_indexed(0..index_buffer.count, 0, 0..1);
     }
 }

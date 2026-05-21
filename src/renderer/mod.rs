@@ -2,6 +2,6 @@ mod buffer;
 mod context;
 mod pipeline;
 
-pub use buffer::{Vertex, VertexBuffer};
+pub use buffer::{IndexBuffer, Vertex, VertexBuffer};
 pub use context::RenderContext;
 pub use pipeline::TrianglePipeline;

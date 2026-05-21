@@ -13,7 +13,7 @@ use winit::{
     window::{Window, WindowAttributes, WindowId},
 };
 
-use crate::renderer::{RenderContext, TrianglePipeline, Vertex, VertexBuffer};
+use crate::renderer::{IndexBuffer, RenderContext, TrianglePipeline, Vertex, VertexBuffer};
 
 use super::input::InputState;
 
@@ -23,6 +23,7 @@ pub struct ActiveWindow {
     pub renderer: RenderContext,
     pub triangle: TrianglePipeline,
     pub vertex_buffer: VertexBuffer,
+    pub index_buffer: IndexBuffer,
 }
 
 pub struct WindowState {
@@ -81,20 +82,27 @@ impl ApplicationHandler for WindowState {
 
         let vertices = vec![
             Vertex {
-                position: [0.0, 0.5, 0.0],
+                position: [-0.5, 0.5, 0.0],
                 color: [1.0, 0.0, 0.0],
             },
             Vertex {
-                position: [-0.5, -0.5, 0.0],
+                position: [0.5, 0.5, 0.0],
                 color: [0.0, 1.0, 0.0],
             },
             Vertex {
-                position: [0.5, -0.5, 0.0],
+                position: [-0.5, -0.5, 0.0],
                 color: [0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [0.5, -0.5, 0.0],
+                color: [1.0, 0.0, 0.0],
             },
         ];
 
+        let indices: Vec<u16> = vec![0, 2, 1, 1, 2, 3];
+
         let vertex_buffer = VertexBuffer::new(&renderer.device, &vertices);
+        let index_buffer = IndexBuffer::new(&renderer.device, &indices);
 
         window.set_visible(true);
 
@@ -104,6 +112,7 @@ impl ApplicationHandler for WindowState {
             renderer,
             triangle,
             vertex_buffer,
+            index_buffer,
         })
     }
 
@@ -144,9 +153,12 @@ impl ApplicationHandler for WindowState {
                                 label: Some("frame_encoder"),
                             });
 
-                    active
-                        .triangle
-                        .draw(&mut encoder, &view, &active.vertex_buffer);
+                    active.triangle.draw(
+                        &mut encoder,
+                        &view,
+                        &active.vertex_buffer,
+                        &active.index_buffer,
+                    );
 
                     active
                         .renderer

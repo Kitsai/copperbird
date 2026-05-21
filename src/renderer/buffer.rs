@@ -48,3 +48,23 @@ impl VertexBuffer {
         }
     }
 }
+
+pub struct IndexBuffer {
+    pub buffer: wgpu::Buffer,
+    pub count: u32,
+}
+
+impl IndexBuffer {
+    pub fn new(device: &wgpu::Device, indices: &[u16]) -> Self {
+        let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("index_buffer"),
+            contents: bytemuck::cast_slice(indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        Self {
+            buffer,
+            count: indices.len() as u32,
+        }
+    }
+}
