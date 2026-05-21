@@ -13,7 +13,7 @@ use winit::{
     window::{Window, WindowAttributes, WindowId},
 };
 
-use crate::renderer::{RenderContext, TrianglePipeline};
+use crate::renderer::{RenderContext, TrianglePipeline, Vertex, VertexBuffer};
 
 use super::input::InputState;
 
@@ -22,6 +22,7 @@ pub struct ActiveWindow {
     pub input: InputState,
     pub renderer: RenderContext,
     pub triangle: TrianglePipeline,
+    pub vertex_buffer: VertexBuffer,
 }
 
 pub struct WindowState {
@@ -78,6 +79,23 @@ impl ApplicationHandler for WindowState {
 
         let triangle = TrianglePipeline::new(&renderer.device, renderer.surface_config.format);
 
+        let vertices = vec![
+            Vertex {
+                position: [0.0, 0.5, 0.0],
+                color: [1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: [-0.5, -0.5, 0.0],
+                color: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: [0.5, -0.5, 0.0],
+                color: [0.0, 0.0, 1.0],
+            },
+        ];
+
+        let vertex_buffer = VertexBuffer::new(&renderer.device, &vertices);
+
         window.set_visible(true);
 
         self.active = Some(ActiveWindow {
@@ -85,6 +103,7 @@ impl ApplicationHandler for WindowState {
             input: InputState::default(),
             renderer,
             triangle,
+            vertex_buffer,
         })
     }
 
@@ -125,7 +144,9 @@ impl ApplicationHandler for WindowState {
                                 label: Some("frame_encoder"),
                             });
 
-                    active.triangle.draw(&mut encoder, &view);
+                    active
+                        .triangle
+                        .draw(&mut encoder, &view, &active.vertex_buffer);
 
                     active
                         .renderer

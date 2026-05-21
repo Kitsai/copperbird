@@ -1,3 +1,5 @@
+use crate::renderer::buffer::{Vertex, VertexBuffer};
+
 pub struct TrianglePipeline {
     pub pipeline: wgpu::RenderPipeline,
 }
@@ -24,7 +26,7 @@ impl TrianglePipeline {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: Some("vs_main"),
-                buffers: &[],
+                buffers: &[Vertex::layout()],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
             },
             fragment: Some(wgpu::FragmentState {
@@ -60,7 +62,12 @@ impl TrianglePipeline {
         Self { pipeline }
     }
 
-    pub fn draw(&self, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView) {
+    pub fn draw(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        vertex_buffer: &VertexBuffer,
+    ) {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("triangle_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -84,6 +91,8 @@ impl TrianglePipeline {
         });
 
         pass.set_pipeline(&self.pipeline);
+
+        pass.set_vertex_buffer(0, vertex_buffer.buffer.slice(..));
 
         pass.draw(0..3, 0..1);
     }
