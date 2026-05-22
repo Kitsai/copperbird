@@ -14,7 +14,8 @@ use winit::{
 };
 
 use crate::renderer::{
-    IndexBuffer, RenderContext, Texture, TrianglePipeline, Vertex, VertexBuffer,
+    self, CameraBuffer, CameraUniform, IndexBuffer, RenderContext, Texture, TrianglePipeline,
+    Vertex, VertexBuffer,
 };
 
 use super::input::InputState;
@@ -27,6 +28,8 @@ pub struct ActiveWindow {
     pub vertex_buffer: VertexBuffer,
     pub index_buffer: IndexBuffer,
     pub texture: Texture,
+    pub camera_uniform: CameraUniform,
+    pub camera_buffer: CameraBuffer,
 }
 
 pub struct WindowState {
@@ -90,24 +93,33 @@ impl ApplicationHandler for WindowState {
             &renderer.queue,
             texture_bytes,
             "test_texture",
-            &triangle.bind_group_layout,
+            &triangle.texture_bind_group_layout,
+        );
+
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_projection(self.width, self.height);
+
+        let camera_buffer = CameraBuffer::new(
+            &renderer.device,
+            &camera_uniform,
+            &triangle.camera_bind_group_layout,
         );
 
         let vertices = vec![
             Vertex {
-                position: [-0.5, 0.5, 0.0],
+                position: [100.0, 100.0, 0.0],
                 tex_coords: [0.0, 0.0],
             },
             Vertex {
-                position: [0.5, 0.5, 0.0],
+                position: [400.0, 100.0, 0.0],
                 tex_coords: [1.0, 0.0],
             },
             Vertex {
-                position: [-0.5, -0.5, 0.0],
+                position: [100.0, 400.0, 0.0],
                 tex_coords: [0.0, 1.0],
             },
             Vertex {
-                position: [0.5, -0.5, 0.0],
+                position: [400.0, 400.0, 0.0],
                 tex_coords: [1.0, 1.0],
             },
         ];
@@ -127,6 +139,8 @@ impl ApplicationHandler for WindowState {
             vertex_buffer,
             index_buffer,
             texture,
+            camera_uniform,
+            camera_buffer,
         });
     }
 
@@ -172,6 +186,7 @@ impl ApplicationHandler for WindowState {
                         &view,
                         &active.vertex_buffer,
                         &active.index_buffer,
+                        &active.camera_buffer,
                         &active.texture,
                     );
 

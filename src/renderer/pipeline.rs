@@ -1,16 +1,19 @@
 use crate::renderer::{
     buffer::{IndexBuffer, Vertex, VertexBuffer},
     texture::Texture,
+    uniforms::CameraBuffer,
 };
 
 pub struct TrianglePipeline {
     pub pipeline: wgpu::RenderPipeline,
-    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub texture_bind_group_layout: wgpu::BindGroupLayout,
+    pub camera_bind_group_layout: wgpu::BindGroupLayout,
 }
 
 impl TrianglePipeline {
     pub fn new(device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> Self {
-        let bind_group_layout = Texture::bind_group_layout(device);
+        let texture_bind_group_layout = Texture::bind_group_layout(device);
+        let camera_bind_group_layout = CameraBuffer::camera_bind_group_layout(device);
 
         let shader_source = include_str!("shaders/triangle.wgsl");
 
@@ -21,7 +24,10 @@ impl TrianglePipeline {
 
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("triangle_pipeline_layout"),
-            bind_group_layouts: &[Some(&bind_group_layout)],
+            bind_group_layouts: &[
+                Some(&texture_bind_group_layout),
+                Some(&camera_bind_group_layout),
+            ],
             immediate_size: 0,
         });
 
@@ -67,7 +73,8 @@ impl TrianglePipeline {
 
         Self {
             pipeline,
-            bind_group_layout,
+            texture_bind_group_layout,
+            camera_bind_group_layout,
         }
     }
 
@@ -77,6 +84,7 @@ impl TrianglePipeline {
         view: &wgpu::TextureView,
         vertex_buffer: &VertexBuffer,
         index_buffer: &IndexBuffer,
+        camera_buffer: &CameraBuffer,
         texture: &Texture,
     ) {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -107,6 +115,7 @@ impl TrianglePipeline {
         pass.set_index_buffer(index_buffer.buffer.slice(..), wgpu::IndexFormat::Uint16);
 
         pass.set_bind_group(0, &texture.bind_group, &[]);
+        pass.set_bind_group(1, &camera_buffer.bind_group, &[]);
         pass.draw_indexed(0..index_buffer.count, 0, 0..1);
     }
 }
